@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { playClickSound } from "../utils/audio";
-import { Sparkles } from "lucide-react";
+import { Sparkles, FileText } from "lucide-react";
 
 interface NavbarProps {
   lang: "fr" | "en";
@@ -19,31 +19,34 @@ export const Navbar: React.FC<NavbarProps> = ({ lang, setLang }) => {
   };
 
   const navItems = [
-    { id: "sec-hero", labelEn: "Profile", labelFr: "Profil" },
-    { id: "sec-initial", labelEn: "Clients", labelFr: "Clients" },
-    { id: "sec-trackrecord", labelEn: "Experience", labelFr: "Parcours" },
-    { id: "sec-projects", labelEn: "Projects", labelFr: "Projets" },
+    { id: "sec-hero", labelEn: "Home", labelFr: "Accueil" },
+    { id: "sec-work", labelEn: "Work", labelFr: "Projets" },
+    { id: "sec-about", labelEn: "About", labelFr: "À propos" },
     { id: "sec-contact", labelEn: "Contact", labelFr: "Contact" },
   ];
 
   return (
     <header className="fixed top-0 left-0 right-0 z-40 px-4 sm:px-6 py-4 flex items-center justify-between pointer-events-none">
-      {/* Brand logo tag */}
+      
+      {/* Brand: Circular Red Avatar tag matching the video */}
       <div className="pointer-events-auto flex items-center gap-2">
         <a
           href="#sec-hero"
           onClick={() => scrollTo("sec-hero")}
-          className="flex items-center gap-2 bg-zinc-950/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-zinc-800/80 hover:border-zinc-700 transition-all text-xs font-mono font-medium text-zinc-300 hover:text-white group"
+          className="flex items-center gap-2.5 bg-zinc-950/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-zinc-800/80 hover:border-zinc-700 transition-all text-xs font-mono font-medium text-zinc-300 hover:text-white group"
         >
-          <div className="w-2 h-2 rounded-full bg-[#FF3E24] animate-pulse" />
+          {/* Red circle with letter "A" */}
+          <div className="w-5 h-5 rounded-full bg-[#FF3E24] text-white font-black flex items-center justify-center text-[10px] shadow-[0_0_10px_rgba(255,62,36,0.6)]">
+            A
+          </div>
           <span className="font-bold tracking-tight text-white group-hover:text-[#FF3E24] transition-colors">
-            ADEM.O
+            Adem Ouerhani
           </span>
-          <span className="text-[10px] text-zinc-500 font-mono">DSI · '26</span>
+          <span className="text-[10px] text-zinc-500 font-mono hidden sm:inline">DSI · '26</span>
         </a>
       </div>
 
-      {/* Center Floating Pill Navigation */}
+      {/* Center Floating Pill Navigation: Home, Work, About, Contact */}
       <nav className="pointer-events-auto bg-zinc-950/80 backdrop-blur-md border border-zinc-800/80 rounded-full px-2 py-1.5 shadow-[0_8px_30px_rgb(0,0,0,0.5)] flex items-center gap-1">
         {navItems.map((item) => {
           const isActive = activeSection === item.id;
@@ -67,7 +70,7 @@ export const Navbar: React.FC<NavbarProps> = ({ lang, setLang }) => {
         })}
       </nav>
 
-      {/* Right Actions: Lang Switcher & CTA */}
+      {/* Right Actions: Lang Switcher & CV / Contact */}
       <div className="pointer-events-auto flex items-center gap-2">
         <button
           onClick={() => {
@@ -88,7 +91,7 @@ export const Navbar: React.FC<NavbarProps> = ({ lang, setLang }) => {
           className="hidden md:flex items-center gap-1.5 bg-[#FF3E24] hover:bg-[#ff553e] text-white text-xs font-semibold px-3.5 py-1.5 rounded-full transition-all shadow-[0_0_20px_rgba(255,62,36,0.35)]"
         >
           <Sparkles className="w-3.5 h-3.5" />
-          <span>{lang === "fr" ? "Discuter PFE" : "Hire Me"}</span>
+          <span>{lang === "fr" ? "Contact PFE" : "Get In Touch"}</span>
         </a>
       </div>
     </header>

@@ -21,7 +21,7 @@ export const TrackRecordSection: React.FC = () => {
   ];
 
   return (
-    <section id="sec-trackrecord" className="min-h-screen py-24 px-4 sm:px-6 max-w-7xl mx-auto border-t border-zinc-900">
+    <section id="sec-about" className="min-h-screen py-24 px-4 sm:px-6 max-w-7xl mx-auto border-t border-zinc-900">
       
       {/* 1. Horizontal List of Technology Names (Dropped above heading) */}
       <div

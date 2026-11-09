@@ -1,294 +1,359 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from "react";
-import { TimelinePhase, VideoCursor } from "../types/timeline";
+import { BuildState, AgentCursor } from "../types/timeline";
 import { playClickSound, playPopSound } from "../utils/audio";
 
-interface VideoBuildContextType {
-  currentTime: number; // 0.0 to 38.0
-  phase: TimelinePhase;
-  isPlaying: boolean;
+interface BuildContextType {
+  buildState: BuildState;
+  isBuilding: boolean;
   isFinished: boolean;
-  togglePlay: () => void;
-  replay: () => void;
-  skip: () => void;
-  cursors: VideoCursor[];
+  cursors: AgentCursor[];
   isRevealed: (id: string) => boolean;
+  stopBuild: () => void;
+  replayBuild: () => void;
+  toggleBuild: () => void;
 }
 
-const VideoBuildContext = createContext<VideoBuildContextType | null>(null);
+const BuildContext = createContext<BuildContextType | null>(null);
 
-const CURSOR_COLORS = [
+const AGENT_COLORS = [
   "#FF3E24", // Red
   "#38bdf8", // Sky blue
   "#10b981", // Emerald
-  "#a855f7", // Purple
+  "#a855f7", // Violet
   "#f59e0b", // Amber
   "#ec4899", // Pink
   "#06b6d4", // Cyan
   "#f43f5e", // Rose
+  "#84cc16", // Lime
+  "#6366f1", // Indigo
+  "#14b8a6", // Teal
+  "#eab308", // Yellow
+];
+
+// Technical roles (not personal names!)
+const AGENT_ROLES = [
+  "Text", "Card", "Photo", "Pill", "DB", "Layout",
+  "Style", "Vector", "Code", "Grid", "Motion", "Render"
+];
+
+const ALL_ELEMENTS = [
+  // Hero
+  "hero_backdrop", "hero_photo", "hero_intro", "hero_stats", "hero_actions",
+  // Work / Projects
+  "work_title", "card_01_passi", "card_02_hydroobloom", "card_03_dizy", "card_04_enactus",
+  "pills_01", "pills_02", "pills_03", "pills_04",
+  // Track record & principles
+  "tech_bar", "built_fast_title", "stat_40", "timeline_items", "not_just_code",
+  "body_bio", "education_card", "orange_principle_box",
+  // Contact
+  "contact_title", "contact_items", "orange_ship_it"
 ];
 
 export const VideoBuildProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [currentTime, setCurrentTime] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(true);
-  const [phase, setPhase] = useState<TimelinePhase>("p1_initial_sections");
-  const [cursors, setCursors] = useState<VideoCursor[]>([]);
+  const [buildState, setBuildState] = useState<BuildState>("initial_black");
+  const [cursors, setCursors] = useState<AgentCursor[]>([]);
   const [revealedSet, setRevealedSet] = useState<Set<string>>(new Set());
 
   const animFrameRef = useRef<number | null>(null);
-  const lastTimestampRef = useRef<number | null>(null);
-  const lastScrollPhaseRef = useRef<string>("");
+  const startTimeRef = useRef<number | null>(null);
+  const isRunningRef = useRef<boolean>(true);
+  const lastScrolledRef = useRef<string>("");
 
-  const scrollToSection = (id: string) => {
+  const scrollToEl = (id: string, block: ScrollLogicalPosition = "start") => {
     const el = document.getElementById(id);
     if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      el.scrollIntoView({ behavior: "smooth", block });
     }
   };
 
-  const startTimeline = () => {
-    setCurrentTime(0);
-    setIsPlaying(true);
-    setPhase("p1_initial_sections");
-    setRevealedSet(new Set());
-    lastTimestampRef.current = null;
-    lastScrollPhaseRef.current = "";
-    scrollToSection("sec-initial");
+  const stopBuild = () => {
+    isRunningRef.current = false;
+    if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+    setBuildState("completed");
+    setCursors([]);
+    setRevealedSet(new Set(ALL_ELEMENTS));
     playPopSound();
   };
 
-  const skip = () => {
-    setIsPlaying(false);
-    setCurrentTime(38.5);
-    setPhase("finished");
+  const replayBuild = () => {
+    if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+    isRunningRef.current = true;
+    startTimeRef.current = null;
+    lastScrolledRef.current = "";
+    setRevealedSet(new Set());
     setCursors([]);
-    // Reveal all
-    setRevealedSet(
-      new Set([
-        "sec03_title", "sec04_title", "sec03_pills", "sec04_pills",
-        "tech_bar", "built_fast_title", "stat_40", "timeline_items", "not_just_code",
-        "body_bio", "education_card", "orange_principle_box",
-        "contact_title", "contact_items", "orange_ship_it",
-        "portfolio_backdrop", "hero_photo", "hero_intro_text", "hero_stats",
-        "work_that_ships_title", "card_01_passi", "card_02_hydroobloom"
-      ])
-    );
+    setBuildState("initial_black");
     window.scrollTo({ top: 0, behavior: "smooth" });
+    playPopSound();
   };
 
-  // Main 00:00 - 00:38 timeline runner loop
-  useEffect(() => {
-    if (!isPlaying) {
-      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
-      return;
+  const toggleBuild = () => {
+    if (buildState === "completed") {
+      replayBuild();
+    } else {
+      stopBuild();
     }
+  };
 
-    const updateLoop = (timestamp: number) => {
-      if (!lastTimestampRef.current) {
-        lastTimestampRef.current = timestamp;
+  useEffect(() => {
+    if (!isRunningRef.current) return;
+
+    const loop = (timestamp: number) => {
+      if (!startTimeRef.current) startTimeRef.current = timestamp;
+      const elapsed = (timestamp - startTimeRef.current) / 1000;
+
+      // PHASE TRANSITIONS & SCROLLING:
+      // 0.0 - 0.6s: initial_black
+      // 0.6 - 2.8s: circle_entrance
+      // 2.8 - 8.0s: build_hero (at top)
+      // 8.0 - 13.5s: build_work (scroll to #sec-work)
+      // 13.5 - 19.0s: build_trackrecord (scroll to #sec-about)
+      // 19.0 - 23.5s: build_contact (scroll to #sec-contact)
+      // 23.5 - 25.0s: dynamic_disappear
+      // 25.0s+: completed
+
+      if (elapsed < 0.6) {
+        setBuildState("initial_black");
+        setCursors([]);
+      } else if (elapsed < 2.8) {
+        setBuildState("circle_entrance");
+        const t = (elapsed - 0.6) / 2.2; // 0 to 1
+        // 12 cursors converge from outside into a rotating circle in center
+        const newCursors: AgentCursor[] = [];
+        for (let i = 0; i < 12; i++) {
+          const angle = (i / 12) * Math.PI * 2 + t * 4;
+          const radius = 55 * (1 - t * 0.72); // shrinks to ~15%
+          newCursors.push({
+            id: i,
+            color: AGENT_COLORS[i],
+            role: AGENT_ROLES[i],
+            x: 50 + radius * Math.cos(angle),
+            y: 50 + (radius * 0.7) * Math.sin(angle), // slightly oval
+            scale: 1 + Math.sin(t * 6 + i) * 0.15,
+            opacity: Math.min(1, t * 2),
+            isClicking: t > 0.8,
+          });
+        }
+        setCursors(newCursors);
+      } else if (elapsed < 8.0) {
+        setBuildState("build_hero");
+        if (lastScrolledRef.current !== "hero") {
+          lastScrolledRef.current = "hero";
+          scrollToEl("sec-hero", "start");
+        }
+
+        const t = (elapsed - 2.8) / 5.2; // 0 to 1
+        // Cursors scatter across Hero to construct it
+        setCursors([
+          // Giant Red PORTFOLIO backdrop (0 & 1)
+          { id: 0, color: AGENT_COLORS[0], role: "Vector", x: 40 + Math.sin(t * 8) * 8, y: 30, opacity: 1 },
+          { id: 1, color: AGENT_COLORS[1], role: "Style", x: 60 + Math.cos(t * 7) * 8, y: 32, opacity: 1 },
+          // Center Portrait (2 & 3)
+          { id: 2, color: AGENT_COLORS[2], role: "Photo", x: 48 + Math.sin(t * 6) * 4, y: 50, opacity: 1, isClicking: true },
+          { id: 3, color: AGENT_COLORS[3], role: "Motion", x: 53 + Math.cos(t * 6) * 4, y: 55, opacity: 1 },
+          // Left Intro Text & Title (4 & 5)
+          { id: 4, color: AGENT_COLORS[4], role: "Text", x: 26 + Math.sin(t * 7) * 4, y: 44, opacity: 1 },
+          { id: 5, color: AGENT_COLORS[5], role: "Text", x: 28 + Math.cos(t * 5) * 4, y: 52, opacity: 1 },
+          // Bio & Actions (6 & 7)
+          { id: 6, color: AGENT_COLORS[6], role: "Card", x: 24 + Math.sin(t * 6) * 3, y: 64, opacity: 1 },
+          { id: 7, color: AGENT_COLORS[7], role: "Layout", x: 30 + Math.cos(t * 7) * 3, y: 72, opacity: 1 },
+          // Right Stats (8, 9, 10, 11)
+          { id: 8, color: AGENT_COLORS[8], role: "DB", x: 74 + Math.sin(t * 6) * 3, y: 38, opacity: 1 },
+          { id: 9, color: AGENT_COLORS[9], role: "Code", x: 76 + Math.cos(t * 5) * 3, y: 50, opacity: 1 },
+          { id: 10, color: AGENT_COLORS[10], role: "Pill", x: 73 + Math.sin(t * 7) * 3, y: 62, opacity: 1 },
+          { id: 11, color: AGENT_COLORS[11], role: "Render", x: 77 + Math.cos(t * 6) * 3, y: 74, opacity: 1 },
+        ]);
+
+        // Element reveals
+        revealItem("hero_backdrop", elapsed >= 3.0, 480);
+        revealItem("hero_photo", elapsed >= 3.8, 620);
+        revealItem("hero_intro", elapsed >= 4.6, 560);
+        revealItem("hero_actions", elapsed >= 5.8, 520);
+        revealItem("hero_stats", elapsed >= 6.6, 680);
+      } else if (elapsed < 13.5) {
+        setBuildState("build_work");
+        if (lastScrolledRef.current !== "work") {
+          lastScrolledRef.current = "work";
+          scrollToEl("sec-work", "start");
+        }
+
+        const t = (elapsed - 8.0) / 5.5; // 0 to 1
+        setCursors([
+          { id: 0, color: AGENT_COLORS[0], role: "Text", x: 30 + Math.sin(t * 7) * 5, y: 22, opacity: 1 },
+          { id: 1, color: AGENT_COLORS[1], role: "Layout", x: 50 + Math.cos(t * 6) * 6, y: 24, opacity: 1 },
+          // Card 01 PASSI
+          { id: 2, color: AGENT_COLORS[2], role: "Card", x: 26 + Math.sin(t * 6) * 4, y: 44, opacity: 1 },
+          { id: 3, color: AGENT_COLORS[3], role: "Pill", x: 32 + Math.cos(t * 7) * 5, y: 56, opacity: 1 },
+          // Card 02 HYDROOBLOOM
+          { id: 4, color: AGENT_COLORS[4], role: "Card", x: 72 + Math.sin(t * 6) * 4, y: 44, opacity: 1 },
+          { id: 5, color: AGENT_COLORS[5], role: "Pill", x: 78 + Math.cos(t * 7) * 5, y: 56, opacity: 1 },
+          // Card 03 DIZY WEB
+          { id: 6, color: AGENT_COLORS[6], role: "Card", x: 28 + Math.sin(t * 5) * 4, y: 74, opacity: 1 },
+          { id: 7, color: AGENT_COLORS[7], role: "Pill", x: 34 + Math.cos(t * 6) * 4, y: 84, opacity: 1 },
+          // Card 04 ENACTUS
+          { id: 8, color: AGENT_COLORS[8], role: "Card", x: 74 + Math.sin(t * 5) * 4, y: 74, opacity: 1 },
+          { id: 9, color: AGENT_COLORS[9], role: "Pill", x: 78 + Math.cos(t * 6) * 4, y: 84, opacity: 1 },
+          { id: 10, color: AGENT_COLORS[10], role: "Code", x: 45 + Math.sin(t * 7) * 4, y: 65, opacity: 1 },
+          { id: 11, color: AGENT_COLORS[11], role: "Render", x: 55 + Math.cos(t * 7) * 4, y: 65, opacity: 1 },
+        ]);
+
+        revealItem("work_title", elapsed >= 8.4, 520);
+        revealItem("card_01_passi", elapsed >= 9.2, 580);
+        revealItem("pills_01", elapsed >= 9.8, 620);
+        revealItem("card_02_hydroobloom", elapsed >= 10.4, 600);
+        revealItem("pills_02", elapsed >= 11.0, 640);
+        revealItem("card_03_dizy", elapsed >= 11.6, 590);
+        revealItem("pills_03", elapsed >= 12.2, 630);
+        revealItem("card_04_enactus", elapsed >= 12.8, 610);
+        revealItem("pills_04", elapsed >= 13.2, 650);
+      } else if (elapsed < 19.0) {
+        setBuildState("build_trackrecord");
+        if (lastScrolledRef.current !== "about") {
+          lastScrolledRef.current = "about";
+          scrollToEl("sec-about", "start");
+        }
+
+        const t = (elapsed - 13.5) / 5.5; // 0 to 1
+        setCursors([
+          // Horizontal tech stack bar
+          { id: 0, color: AGENT_COLORS[0], role: "Style", x: 45 + Math.sin(t * 8) * 15, y: 18, opacity: 1 },
+          // BUILT FAST. SHIPPED REAL.
+          { id: 1, color: AGENT_COLORS[1], role: "Text", x: 28 + Math.cos(t * 6) * 4, y: 34, opacity: 1 },
+          // 40.
+          { id: 2, color: AGENT_COLORS[2], role: "DB", x: 24 + Math.sin(t * 6) * 3, y: 46, opacity: 1 },
+          // NOT JUST CODE. CODE THAT SHIPS.
+          { id: 3, color: AGENT_COLORS[3], role: "Text", x: 30 + Math.cos(t * 7) * 4, y: 62, opacity: 1 },
+          // Bio body text
+          { id: 4, color: AGENT_COLORS[4], role: "Text", x: 26 + Math.sin(t * 5) * 4, y: 76, opacity: 1 },
+          // Timeline on right
+          { id: 5, color: AGENT_COLORS[5], role: "Card", x: 74 + Math.sin(t * 6) * 4, y: 34, opacity: 1 },
+          { id: 6, color: AGENT_COLORS[6], role: "Layout", x: 76 + Math.cos(t * 6) * 4, y: 45, opacity: 1 },
+          // Education
+          { id: 7, color: AGENT_COLORS[7], role: "Card", x: 73 + Math.sin(t * 7) * 3, y: 58, opacity: 1 },
+          // THE ORANGE PRINCIPLE BOX (Agents 8, 9, 10, 11 positioning it!)
+          { id: 8, color: AGENT_COLORS[8], role: "Card", x: 70 + Math.sin(t * 8) * 4, y: 78, opacity: 1, isClicking: true },
+          { id: 9, color: AGENT_COLORS[9], role: "Style", x: 78 + Math.cos(t * 7) * 4, y: 80, opacity: 1 },
+          { id: 10, color: AGENT_COLORS[10], role: "Motion", x: 68 + Math.cos(t * 8) * 3, y: 84, opacity: 1 },
+          { id: 11, color: AGENT_COLORS[11], role: "Render", x: 80 + Math.sin(t * 6) * 3, y: 84, opacity: 1 },
+        ]);
+
+        revealItem("tech_bar", elapsed >= 13.9, 520);
+        revealItem("built_fast_title", elapsed >= 14.5, 560);
+        revealItem("stat_40", elapsed >= 15.2, 600);
+        revealItem("timeline_items", elapsed >= 16.0, 640);
+        revealItem("not_just_code", elapsed >= 16.8, 680);
+        revealItem("body_bio", elapsed >= 17.4, 540);
+        revealItem("education_card", elapsed >= 18.0, 580);
+        revealItem("orange_principle_box", elapsed >= 18.5, 750);
+      } else if (elapsed < 23.5) {
+        setBuildState("build_contact");
+        if (lastScrolledRef.current !== "contact") {
+          lastScrolledRef.current = "contact";
+          scrollToEl("sec-contact", "start");
+        }
+
+        const t = (elapsed - 19.0) / 4.5; // 0 to 1
+        setCursors([
+          // LET'S WORK TOGETHER.
+          { id: 0, color: AGENT_COLORS[0], role: "Text", x: 28 + Math.sin(t * 7) * 4, y: 40, opacity: 1 },
+          { id: 1, color: AGENT_COLORS[1], role: "Style", x: 30 + Math.cos(t * 6) * 4, y: 52, opacity: 1 },
+          // Right labels (Email, Phone, Socials)
+          { id: 2, color: AGENT_COLORS[2], role: "Card", x: 72 + Math.sin(t * 6) * 4, y: 38, opacity: 1 },
+          { id: 3, color: AGENT_COLORS[3], role: "Card", x: 74 + Math.cos(t * 7) * 4, y: 48, opacity: 1 },
+          { id: 4, color: AGENT_COLORS[4], role: "Pill", x: 68 + Math.sin(t * 6) * 3, y: 58, opacity: 1 },
+          { id: 5, color: AGENT_COLORS[5], role: "Pill", x: 78 + Math.cos(t * 6) * 3, y: 58, opacity: 1 },
+          // Orange SHIP IT FOR REAL box
+          { id: 6, color: AGENT_COLORS[6], role: "Card", x: 72 + Math.sin(t * 8) * 3, y: 72, opacity: 1, isClicking: true },
+          { id: 7, color: AGENT_COLORS[7], role: "Style", x: 76 + Math.cos(t * 8) * 3, y: 74, opacity: 1 },
+          // Gathering in cluster like video at 20s
+          { id: 8, color: AGENT_COLORS[8], role: "Render", x: 75 + Math.sin(t * 9) * 2, y: 76, opacity: 1 },
+          { id: 9, color: AGENT_COLORS[9], role: "Motion", x: 70 + Math.cos(t * 9) * 2, y: 76, opacity: 1 },
+          { id: 10, color: AGENT_COLORS[10], role: "Code", x: 73 + Math.sin(t * 8) * 2, y: 78, opacity: 1 },
+          { id: 11, color: AGENT_COLORS[11], role: "Layout", x: 77 + Math.cos(t * 8) * 2, y: 78, opacity: 1 },
+        ]);
+
+        revealItem("contact_title", elapsed >= 19.4, 520);
+        revealItem("contact_items", elapsed >= 20.4, 580);
+        revealItem("orange_ship_it", elapsed >= 21.6, 720);
+      } else if (elapsed < 25.0) {
+        setBuildState("dynamic_disappear");
+        const t = (elapsed - 23.5) / 1.5; // 0 to 1
+        // Cursors swirl together in an implosion / vortex and vanish!
+        const swirling: AgentCursor[] = [];
+        for (let i = 0; i < 12; i++) {
+          const angle = (i / 12) * Math.PI * 2 + t * 10;
+          const radius = (1 - t) * 15;
+          swirling.push({
+            id: i,
+            color: AGENT_COLORS[i],
+            role: AGENT_ROLES[i],
+            x: 50 + radius * Math.cos(angle),
+            y: 50 + radius * Math.sin(angle),
+            scale: Math.max(0, 1 - t),
+            opacity: Math.max(0, 1 - t),
+          });
+        }
+        setCursors(swirling);
+      } else {
+        // Complete
+        isRunningRef.current = false;
+        setBuildState("completed");
+        setCursors([]);
+        setRevealedSet(new Set(ALL_ELEMENTS));
+        // Return view smoothly to top hero so the user can freely enjoy their site
+        scrollToEl("sec-hero", "start");
+        return;
       }
-      const delta = (timestamp - lastTimestampRef.current) / 1000;
-      lastTimestampRef.current = timestamp;
 
-      setCurrentTime((prev) => {
-        const nextTime = prev + delta;
-
-        // 1. Phase Detection & Auto-Scroll
-        if (nextTime < 3.0) {
-          setPhase("p1_initial_sections");
-          if (lastScrollPhaseRef.current !== "p1") {
-            lastScrollPhaseRef.current = "p1";
-            scrollToSection("sec-initial");
-          }
-        } else if (nextTime >= 3.0 && nextTime < 10.0) {
-          setPhase("p2_built_fast");
-          if (lastScrollPhaseRef.current !== "p2") {
-            lastScrollPhaseRef.current = "p2";
-            scrollToSection("sec-trackrecord");
-          }
-        } else if (nextTime >= 10.0 && nextTime < 17.0) {
-          setPhase("p3_principles");
-          if (lastScrollPhaseRef.current !== "p3") {
-            lastScrollPhaseRef.current = "p3";
-            const el = document.getElementById("orange-principle-container");
-            if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
-          }
-        } else if (nextTime >= 17.0 && nextTime < 21.0) {
-          setPhase("p4_contact");
-          if (lastScrollPhaseRef.current !== "p4") {
-            lastScrollPhaseRef.current = "p4";
-            scrollToSection("sec-contact");
-          }
-        } else if (nextTime >= 21.0 && nextTime < 30.0) {
-          setPhase("p5_hero_profile");
-          if (lastScrollPhaseRef.current !== "p5") {
-            lastScrollPhaseRef.current = "p5";
-            scrollToSection("sec-hero");
-          }
-        } else if (nextTime >= 30.0 && nextTime < 38.0) {
-          setPhase("p6_work_that_ships");
-          if (lastScrollPhaseRef.current !== "p6") {
-            lastScrollPhaseRef.current = "p6";
-            scrollToSection("sec-projects");
-          }
-        } else if (nextTime >= 38.0) {
-          setPhase("finished");
-          setIsPlaying(false);
-          setCursors([]);
-          return 38.5;
-        }
-
-        // 2. Incremental Element Reveal along timestamps
-        setRevealedSet((prevSet) => {
-          const nextSet = new Set(prevSet);
-          const add = (id: string, t: number, sfxPitch?: number) => {
-            if (nextTime >= t && !nextSet.has(id)) {
-              nextSet.add(id);
-              if (sfxPitch) playClickSound(sfxPitch);
-            }
-          };
-
-          // 00:00 - 00:03
-          add("sec03_title", 0.3, 500);
-          add("sec04_title", 0.9, 540);
-          add("sec03_pills", 1.5, 580);
-          add("sec04_pills", 2.1, 620);
-
-          // 00:03 - 00:10
-          add("tech_bar", 3.2, 520);
-          add("built_fast_title", 4.0, 560);
-          add("stat_40", 5.2, 600);
-          add("timeline_items", 6.5, 640);
-          add("not_just_code", 8.2, 680);
-
-          // 00:10 - 00:17
-          add("body_bio", 10.5, 500);
-          add("education_card", 12.5, 540);
-          add("orange_principle_box", 14.8, 720);
-
-          // 00:17 - 00:21
-          add("contact_title", 17.5, 500);
-          add("contact_items", 18.8, 560);
-          add("orange_ship_it", 20.0, 680);
-
-          // 00:21 - 00:30
-          add("portfolio_backdrop", 21.5, 480);
-          add("hero_photo", 23.2, 650);
-          add("hero_intro_text", 25.5, 580);
-          add("hero_stats", 28.0, 620);
-
-          // 00:30 - 00:38
-          add("work_that_ships_title", 30.5, 540);
-          add("card_01_passi", 32.5, 600);
-          add("card_02_hydroobloom", 35.2, 660);
-
-          return nextSet;
-        });
-
-        // 3. Dynamic Cursor Coordinates matching the active section
-        if (nextTime < 3.0) {
-          // 00:00 - 00:03: Cursors dropping 03 DUM & 04 CUBAN CLUB and pills
-          setCursors([
-            { id: 0, color: "#FF3E24", x: 20 + Math.sin(nextTime * 3) * 5, y: 35, opacity: 1 },
-            { id: 1, color: "#38bdf8", x: 25 + Math.cos(nextTime * 4) * 6, y: 50, opacity: 1 },
-            { id: 2, color: "#10b981", x: 65 + Math.sin(nextTime * 4) * 5, y: 35, opacity: 1 },
-            { id: 3, color: "#a855f7", x: 72 + Math.cos(nextTime * 3) * 6, y: 50, opacity: 1 },
-            { id: 4, color: "#f59e0b", x: 45 + Math.sin(nextTime * 5) * 8, y: 40, opacity: 1 },
-          ]);
-        } else if (nextTime < 10.0) {
-          // 00:03 - 00:10: BUILT FAST, 40., tech bar, timeline, NOT JUST CODE
-          setCursors([
-            { id: 0, color: "#FF3E24", x: 22 + Math.sin(nextTime * 4) * 4, y: 22, opacity: 1 }, // Tech bar
-            { id: 1, color: "#38bdf8", x: 30 + Math.cos(nextTime * 3) * 5, y: 42, opacity: 1 }, // Built fast
-            { id: 2, color: "#10b981", x: 35 + Math.sin(nextTime * 5) * 4, y: 62, opacity: 1 }, // 40.
-            { id: 3, color: "#a855f7", x: 75 + Math.cos(nextTime * 3) * 4, y: 48, opacity: 1 }, // Timeline
-            { id: 4, color: "#f59e0b", x: 32 + Math.sin(nextTime * 4) * 6, y: 78, opacity: 1 }, // Not just code
-          ]);
-        } else if (nextTime < 17.0) {
-          // 00:10 - 00:17: Body text, Education, Orange principle box
-          setCursors([
-            { id: 0, color: "#FF3E24", x: 30 + Math.sin(nextTime * 4) * 6, y: 38, opacity: 1 }, // Bio
-            { id: 1, color: "#38bdf8", x: 72 + Math.cos(nextTime * 3) * 5, y: 38, opacity: 1 }, // Education
-            { id: 2, color: "#f59e0b", x: 50 + Math.sin(nextTime * 6) * 4, y: 62, opacity: 1 }, // Placing Orange Box!
-            { id: 3, color: "#10b981", x: 45 + Math.cos(nextTime * 4) * 5, y: 65, opacity: 1 },
-          ]);
-        } else if (nextTime < 21.0) {
-          // 00:17 - 00:21: Contact, right labels, Orange SHIP IT
-          setCursors([
-            { id: 0, color: "#FF3E24", x: 28 + Math.sin(nextTime * 5) * 5, y: 40, opacity: 1 }, // Title
-            { id: 1, color: "#38bdf8", x: 70 + Math.cos(nextTime * 4) * 4, y: 42, opacity: 1 }, // Email/Phone
-            { id: 2, color: "#10b981", x: 74 + Math.sin(nextTime * 3) * 5, y: 55, opacity: 1 }, // Socials
-            { id: 3, color: "#f59e0b", x: 72 + Math.cos(nextTime * 5) * 3, y: 70, opacity: 1 }, // Orange SHIP IT
-          ]);
-        } else if (nextTime < 30.0) {
-          // 00:21 - 00:30: Red PORTFOLIO, Photo, Hello I'm Adem, Stats
-          setCursors([
-            { id: 0, color: "#FF3E24", x: 50 + Math.sin(nextTime * 3) * 8, y: 25, opacity: 1 }, // PORTFOLIO text
-            { id: 1, color: "#38bdf8", x: 50 + Math.cos(nextTime * 4) * 4, y: 45, opacity: 1 }, // Positioning Photo
-            { id: 2, color: "#a855f7", x: 26 + Math.sin(nextTime * 4) * 5, y: 38, opacity: 1 }, // Hello I'm Adem
-            { id: 3, color: "#10b981", x: 28 + Math.cos(nextTime * 3) * 4, y: 52, opacity: 1 }, // Title & bio
-            { id: 4, color: "#f59e0b", x: 78 + Math.sin(nextTime * 5) * 4, y: 45, opacity: 1 }, // Stats
-          ]);
-        } else if (nextTime < 38.0) {
-          // 00:30 - 00:38: WORK THAT SHIPS, 01 EVENEEZ, 02 JANSETU
-          setCursors([
-            { id: 0, color: "#FF3E24", x: 50 + Math.sin(nextTime * 3) * 6, y: 20, opacity: 1 }, // Header
-            { id: 1, color: "#38bdf8", x: 26 + Math.cos(nextTime * 4) * 4, y: 42, opacity: 1 }, // Card 01
-            { id: 2, color: "#10b981", x: 32 + Math.sin(nextTime * 5) * 4, y: 60, opacity: 1 }, // Card 01 pills
-            { id: 3, color: "#a855f7", x: 72 + Math.cos(nextTime * 4) * 4, y: 42, opacity: 1 }, // Card 02
-            { id: 4, color: "#f59e0b", x: 78 + Math.sin(nextTime * 3) * 4, y: 60, opacity: 1 }, // Card 02 pills
-          ]);
-        } else {
-          // Disappearing
-          setCursors([]);
-        }
-
-        return nextTime;
-      });
-
-      animFrameRef.current = requestAnimationFrame(updateLoop);
+      animFrameRef.current = requestAnimationFrame(loop);
     };
 
-    animFrameRef.current = requestAnimationFrame(updateLoop);
+    const revealItem = (id: string, condition: boolean, pitch?: number) => {
+      if (condition) {
+        setRevealedSet((prev) => {
+          if (!prev.has(id)) {
+            const next = new Set(prev);
+            next.add(id);
+            if (pitch) playClickSound(pitch);
+            return next;
+          }
+          return prev;
+        });
+      }
+    };
+
+    animFrameRef.current = requestAnimationFrame(loop);
+
     return () => {
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
     };
-  }, [isPlaying]);
-
-  // Initial mount trigger
-  useEffect(() => {
-    startTimeline();
-  }, []);
-
-  const togglePlay = () => {
-    setIsPlaying(!isPlaying);
-  };
+  }, [buildState]);
 
   const isRevealed = (id: string) => {
-    if (phase === "finished") return true;
+    if (buildState === "completed") return true;
     return revealedSet.has(id);
   };
 
   return (
-    <VideoBuildContext.Provider
+    <BuildContext.Provider
       value={{
-        currentTime,
-        phase,
-        isPlaying,
-        isFinished: phase === "finished",
-        togglePlay,
-        replay: startTimeline,
-        skip,
+        buildState,
+        isBuilding: buildState !== "completed",
+        isFinished: buildState === "completed",
         cursors,
         isRevealed,
+        stopBuild,
+        replayBuild,
+        toggleBuild,
       }}
     >
       {children}
-    </VideoBuildContext.Provider>
+    </BuildContext.Provider>
   );
 };
 
 export const useVideoBuild = () => {
-  const context = useContext(VideoBuildContext);
+  const context = useContext(BuildContext);
   if (!context) {
     throw new Error("useVideoBuild must be used within VideoBuildProvider");
   }

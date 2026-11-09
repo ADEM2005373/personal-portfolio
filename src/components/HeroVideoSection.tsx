@@ -6,14 +6,16 @@ import { ArrowRight, MapPin, Award } from "lucide-react";
 export const HeroVideoSection: React.FC = () => {
   const { isRevealed } = useVideoBuild();
 
-  const backdropReady = isRevealed("portfolio_backdrop");
+  const backdropReady = isRevealed("hero_backdrop") || isRevealed("portfolio_backdrop");
   const photoReady = isRevealed("hero_photo");
-  const introReady = isRevealed("hero_intro_text");
+  const introReady = isRevealed("hero_intro") || isRevealed("hero_intro_text");
   const statsReady = isRevealed("hero_stats");
 
   return (
-    <section id="sec-hero" className="relative min-h-screen py-24 px-4 sm:px-6 max-w-7xl mx-auto border-t border-zinc-900 flex flex-col justify-center overflow-hidden">
-      
+    <section
+      id="sec-hero"
+      className="relative min-h-[95vh] pt-28 pb-20 px-4 sm:px-6 max-w-7xl mx-auto flex flex-col justify-center overflow-hidden"
+    >
       {/* 1. Large Faint Red "PORTFOLIO" Text in Background */}
       <div
         className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full text-center pointer-events-none select-none transition-all duration-1000 ${
@@ -68,7 +70,7 @@ export const HeroVideoSection: React.FC = () => {
 
           <div className="flex items-center gap-3 pt-2">
             <a
-              href="#sec-projects"
+              href="#sec-work"
               className="inline-flex items-center gap-2 bg-[#FF3E24] hover:bg-[#ff553e] text-white px-5 py-3 rounded-md text-xs font-mono uppercase tracking-wider font-bold transition-all shadow-[0_0_20px_rgba(255,62,36,0.35)] hover:-translate-y-0.5"
             >
               <span>VIEW WORK</span>
@@ -128,7 +130,7 @@ export const HeroVideoSection: React.FC = () => {
                 </div>
               </div>
 
-              {/* Floating badges on portrait */}
+              {/* Floating badge on portrait */}
               <div className="absolute -top-3 -right-3 hidden sm:flex items-center gap-1.5 bg-[#76b900] text-black text-[10px] font-mono font-bold px-2.5 py-1 rounded-md shadow-lg rotate-3">
                 <Award className="w-3 h-3 text-black" />
                 <span>NVIDIA CUDA</span>
@@ -170,7 +172,7 @@ export const HeroVideoSection: React.FC = () => {
             <div className="flex items-baseline justify-between">
               <span className="text-4xl font-black font-heading text-white">02</span>
               <span className="text-[10px] font-mono text-[#FF3E24] bg-[#FF3E24]/10 px-2 py-0.5 rounded">
-                LIVE PRODUCTION
+                LIVE SITES
               </span>
             </div>
             <p className="text-xs text-zinc-400 mt-1 font-mono uppercase">Sites in live deployment</p>
@@ -189,7 +191,6 @@ export const HeroVideoSection: React.FC = () => {
         </div>
 
       </div>
-
     </section>
   );
 };
