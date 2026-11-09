@@ -1,54 +1,45 @@
 import React, { useState } from "react";
-import { VideoBuildProvider } from "./context/VideoBuildEngine";
-import { CursorChoreography } from "./components/CursorChoreography";
 import { Navbar } from "./components/Navbar";
-import { HeroVideoSection } from "./components/HeroVideoSection";
-import { WorkThatShipsSection } from "./components/WorkThatShipsSection";
-import { TrackRecordSection } from "./components/TrackRecordSection";
-import { ContactVideoSection } from "./components/ContactVideoSection";
+import { Hero } from "./components/Hero";
+import { ProjectsSection } from "./components/ProjectsSection";
+import { SkillsAndCertifications } from "./components/SkillsAndCertifications";
+import { ExperienceSection } from "./components/ExperienceSection";
+import { ContactSection } from "./components/ContactSection";
 import { Footer } from "./components/Footer";
 import { BottomDock } from "./components/BottomDock";
 
-export const AppContent: React.FC = () => {
+export const App: React.FC = () => {
   const [lang, setLang] = useState<"fr" | "en">("fr");
 
   return (
-    <div className="relative min-h-screen bg-[#070709] text-zinc-100 overflow-x-hidden selection:bg-[#FF3E24] selection:text-white">
-      {/* 12 Live Autonomous Agent Cursors (Building animation trick) */}
-      <CursorChoreography />
-
-      {/* Floating Header Navbar */}
+    <div className="relative min-h-screen bg-[#070709] text-zinc-100 overflow-x-hidden selection:bg-[#FF3E24] selection:text-white antialiased">
+      {/* Top Floating Navigation */}
       <Navbar lang={lang} setLang={setLang} />
 
-      {/* Main Content in Natural Portfolio Order */}
+      {/* Main Content Sections */}
       <main className="space-y-4">
-        {/* 1. Hero Section (Home) - Red PORTFOLIO, Portrait, Hello Adem Ouerhani, Stats */}
-        <HeroVideoSection />
+        {/* 1. Hero: Bio, Portrait with Red Neon Backlight, Key Impact Stats */}
+        <Hero lang={lang} />
 
-        {/* 2. Projects Section (Work) - "WORK THAT SHIPS.", 01 PASSI, 02 HYDROOBLOOM, 03 DIZY WEB, 04 ENACTUS */}
-        <WorkThatShipsSection />
+        {/* 2. Flagship Projects: PASSI, HYDROOBLOOM, DIZY WEB, ENACTUS, ECOTRACK + Modal Architecture */}
+        <ProjectsSection lang={lang} />
 
-        {/* 3. Track Record & Principles (About) - "BUILT FAST. SHIPPED REAL.", 40., Orange Principle Box */}
-        <TrackRecordSection />
+        {/* 3. Skills & Official NVIDIA CUDA DLI Certification Card + Orange Principle Box */}
+        <SkillsAndCertifications lang={lang} />
 
-        {/* 4. Contact Section (Contact) - "LET'S WORK TOGETHER.", Orange "SHIP IT FOR REAL." */}
-        <ContactVideoSection />
+        {/* 4. Experience Timeline & Higher Education (Licence DSI ISET Djerba) */}
+        <ExperienceSection lang={lang} />
+
+        {/* 5. Contact Direct, PFE 2026, Fast Messaging & Orange Callout */}
+        <ContactSection lang={lang} />
       </main>
 
       {/* Footer */}
       <Footer lang={lang} />
 
-      {/* Floating Bottom Dock with "12 AGENTS LIVE" and controls */}
+      {/* Floating Bottom Status Dock with Djerba Time, Audio Toggle & Back to Top */}
       <BottomDock lang={lang} />
     </div>
-  );
-};
-
-export const App: React.FC = () => {
-  return (
-    <VideoBuildProvider>
-      <AppContent />
-    </VideoBuildProvider>
   );
 };
 

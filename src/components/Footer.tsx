@@ -1,22 +1,13 @@
 import React from "react";
 import { PERSONAL_INFO } from "../data/portfolioData";
-import { useVideoBuild } from "../context/VideoBuildEngine";
-import { Heart, Mail } from "lucide-react";
-import { GithubIcon, LinkedinIcon } from "./Icons";
 
 interface FooterProps {
   lang: "fr" | "en";
 }
 
 export const Footer: React.FC<FooterProps> = ({ lang }) => {
-  const { isRevealed } = useVideoBuild();
-
   return (
-    <footer
-      className={`pb-28 pt-12 border-t border-zinc-900 bg-zinc-950/80 text-zinc-500 font-mono text-xs transition-opacity duration-700 ${
-        isRevealed("contact_items") ? "opacity-100" : "opacity-0 pointer-events-none"
-      }`}
-    >
+    <footer className="pb-28 pt-12 border-t border-zinc-900 bg-zinc-950/80 text-zinc-500 font-mono text-xs">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
         
         <div className="flex items-center gap-2">
@@ -28,8 +19,8 @@ export const Footer: React.FC<FooterProps> = ({ lang }) => {
 
         <div className="text-center text-zinc-500 text-[11px]">
           {lang === "fr"
-            ? "Conçu avec React, TypeScript & Tailwind CSS. Inspiré du design canvas Figma."
-            : "Engineered with React, TypeScript & Tailwind CSS. Inspired by Figma canvas aesthetics."}
+            ? "Conçu avec React 19, TypeScript & Tailwind CSS • Tous droits réservés © 2026"
+            : "Engineered with React 19, TypeScript & Tailwind CSS • All rights reserved © 2026"}
         </div>
 
         <div className="flex items-center gap-4 text-zinc-400">
