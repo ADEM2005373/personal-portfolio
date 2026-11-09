@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import { useVideoBuild } from "../context/VideoBuildEngine";
 import { FigmaInspectorTag } from "./FigmaInspectorTag";
-import { CheckCircle2, ChevronRight, X, ExternalLink } from "lucide-react";
+import { CheckCircle2, ChevronRight, X } from "lucide-react";
 import { GithubIcon } from "./Icons";
 
 interface ProjectItem {
+  id: string;
+  pillsId: string;
   number: string;
   title: string;
   category: string;
@@ -13,20 +15,21 @@ interface ProjectItem {
   bullets: string[];
   tags: string[];
   github: string;
-  live?: string;
   revealKey: string;
   pillsKey: string;
   color: string;
 }
 
 export const WorkThatShipsSection: React.FC = () => {
-  const { isRevealed } = useVideoBuild();
+  const { isRevealed, isElementBuilding } = useVideoBuild();
   const [modalProject, setModalProject] = useState<ProjectItem | null>(null);
 
-  const titleReady = isRevealed("work_title") || isRevealed("work_that_ships_title");
+  const titleReady = isRevealed("work_title");
 
   const projects: ProjectItem[] = [
     {
+      id: "card-01-passi",
+      pillsId: "pills-01",
       number: "01",
       title: "PASSI",
       category: "FULL-STACK MEVN",
@@ -45,6 +48,8 @@ export const WorkThatShipsSection: React.FC = () => {
       color: "#FF3E24"
     },
     {
+      id: "card-02-hydroobloom",
+      pillsId: "pills-02",
       number: "02",
       title: "HYDROOBLOOM",
       category: "IOT & HARDWARE",
@@ -63,6 +68,8 @@ export const WorkThatShipsSection: React.FC = () => {
       color: "#10b981"
     },
     {
+      id: "card-03-dizy",
+      pillsId: "pills-03",
       number: "03",
       title: "DIZY WEB",
       category: "PRODUCTION AGENCY PLATFORM",
@@ -81,6 +88,8 @@ export const WorkThatShipsSection: React.FC = () => {
       color: "#38bdf8"
     },
     {
+      id: "card-04-enactus",
+      pillsId: "pills-04",
       number: "04",
       title: "ENACTUS CLUB",
       category: "3D WEBGL SHOWCASE",
@@ -105,6 +114,7 @@ export const WorkThatShipsSection: React.FC = () => {
       
       {/* Heading: WORK THAT SHIPS. */}
       <div
+        id="work-heading"
         className={`mb-12 transition-all duration-700 ${
           titleReady ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
         }`}
@@ -126,10 +136,17 @@ export const WorkThatShipsSection: React.FC = () => {
         {projects.map((proj) => {
           const cardReady = isRevealed(proj.revealKey);
           const pillsReady = isRevealed(proj.pillsKey);
+          const isCardBuilding = isElementBuilding(proj.revealKey);
 
           return (
-            <FigmaInspectorTag key={proj.number} label={`Project:${proj.number}_${proj.title}`} dimension="600x480">
+            <FigmaInspectorTag
+              key={proj.number}
+              label={`Project:${proj.number}_${proj.title}`}
+              dimension="600x480"
+              isBuilding={isCardBuilding}
+            >
               <div
+                id={proj.id}
                 className={`p-7 rounded-2xl bg-zinc-950/80 border border-zinc-800/80 flex flex-col justify-between transition-all duration-700 hover:border-zinc-700 h-full ${
                   cardReady ? "opacity-100 translate-y-0" : "opacity-0 translate-y-12"
                 }`}
@@ -169,6 +186,7 @@ export const WorkThatShipsSection: React.FC = () => {
                 <div>
                   {/* Dropped Pill-shaped Tags */}
                   <div
+                    id={proj.pillsId}
                     className={`flex flex-wrap gap-1.5 mb-5 pt-3 border-t border-zinc-900 transition-all duration-700 ${
                       pillsReady ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
                     }`}
