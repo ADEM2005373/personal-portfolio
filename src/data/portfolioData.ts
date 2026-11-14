@@ -29,10 +29,10 @@ export interface Experience {
 
 export const PERSONAL_INFO = {
   name: "Adem Ouerhani",
-  roleEn: "Full-Stack Developer & Software Systems Engineer",
-  roleFr: "Développeur Full-Stack & Systèmes d'Information",
+  roleEn: "Full-Stack Developer (MEVN & MERN)",
+  roleFr: "Développeur Full-Stack (MEVN & MERN)",
   status: "Available for PFE / Full-Time (2026)",
-  statusFr: "À la recherche d'un stage de fin d'études (PFE) ou opportunité en ingénierie logicielle",
+  statusFr: "À la recherche d'un stage de fin d'études (PFE) ou opportunité de Développeur Full-Stack",
   location: "Midoun, Djerba, Tunisia",
   email: "ouerhaniadem0805@gmail.com",
   phone: "+216 29 763 603",
@@ -184,7 +184,7 @@ export const PROJECTS: Project[] = [
     tagline: "Hackathon Registration Platform & Dynamic Theming",
     category: "Web Application",
     year: "2024",
-    role: "Frontend Engineer",
+    role: "Frontend Developer",
     metrics: "Multi-Team Realtime Registration",
     description: "Plateforme d'événement multi-hackathons avec animation d'ouverture cyber, basculement dynamique de thèmes et formulaire d'enregistrement sans friction synchronisé avec Google Sheets via Google Apps Script.",
     descriptionFr: "Plateforme d'événement multi-hackathons avec animation d'ouverture cyber, basculement dynamique de thèmes et formulaire d'enregistrement sans friction synchronisé avec Google Sheets via Google Apps Script.",

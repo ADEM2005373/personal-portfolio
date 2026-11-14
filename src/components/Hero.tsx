@@ -46,17 +46,17 @@ export const Hero: React.FC<HeroProps> = ({ lang }) => {
                 OUERHANI.
               </span>
             </h1>
-            <div className="mt-2 text-xl sm:text-2xl font-black uppercase tracking-tight text-[#FF3E24] flex items-center gap-2">
-              <span>SOFTWARE ENGINEER</span>
-              <span className="text-zinc-600 font-light">&</span>
-              <span>AI BUILDER</span>
+            <div className="mt-2 text-xl sm:text-2xl font-black uppercase tracking-tight text-[#FF3E24] flex flex-wrap items-center gap-2">
+              <span>{lang === "fr" ? "DÉVELOPPEUR FULL-STACK" : "FULL-STACK DEVELOPER"}</span>
+              <span className="text-zinc-600 font-light">•</span>
+              <span className="text-zinc-300 font-mono text-base sm:text-lg">MEVN & MERN</span>
             </div>
           </div>
 
           <p className="text-sm text-zinc-300 leading-relaxed max-w-lg">
             {lang === "fr"
-              ? "Développeur Full-Stack MEVN (MongoDB, Express, Vue.js, Node.js) et certifié NVIDIA Deep Learning Institute en accélération Python CUDA. Je conçois des plateformes web scalables, des backends haute performance et des solutions prêtes pour la production."
-              : "Full-Stack MEVN (MongoDB, Express, Vue.js, Node.js) developer certified by NVIDIA Deep Learning Institute in CUDA Python acceleration. I architect scalable web platforms, resilient APIs, and production software that actually ships."}
+              ? "Développeur Full-Stack spécialisé principalement dans les stacks MEVN (MongoDB, Express, Vue.js, Node.js) et MERN (MongoDB, Express, React, Node.js), certifié par le NVIDIA Deep Learning Institute en accélération Python CUDA. Je conçois des applications web modernes, scalables et prêtes pour la production."
+              : "Full-Stack Developer specialized primarily in MEVN (MongoDB, Express, Vue.js, Node.js) and MERN (MongoDB, Express, React, Node.js) stacks, certified by NVIDIA Deep Learning Institute in CUDA Python acceleration. I build modern, scalable web applications that ship."}
           </p>
 
           {/* Quick CTA Actions */}
@@ -135,7 +135,7 @@ export const Hero: React.FC<HeroProps> = ({ lang }) => {
                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                   <span className="font-semibold">Adem Ouerhani</span>
                 </div>
-                <span className="text-[#FF3E24] font-bold">MEVN / DSI</span>
+                <span className="text-[#FF3E24] font-bold">MEVN & MERN</span>
               </div>
             </div>
 

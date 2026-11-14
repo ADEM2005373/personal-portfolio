@@ -55,8 +55,8 @@ export const ContactSection: React.FC<ContactProps> = ({ lang }) => {
             </h2>
             <p className="text-xs sm:text-sm text-zinc-300 mt-4 max-w-md leading-relaxed">
               {lang === "fr"
-                ? "Disponible pour un stage de fin d'études (PFE 2026), un poste d'ingénieur développeur Full-Stack ou des projets clients ambitieux."
-                : "Open to 2026 Graduation Internships (PFE), full-time engineering roles, or ambitious full-stack client collaborations."}
+                ? "Disponible pour un stage de fin d'études (PFE 2026), une opportunité de Développeur Full-Stack (MEVN / MERN) ou des projets clients ambitieux."
+                : "Open to 2026 Graduation Internships (PFE), full-time Full-Stack Developer roles (MEVN / MERN), or ambitious client collaborations."}
             </p>
           </div>
 

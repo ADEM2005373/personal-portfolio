@@ -9,8 +9,8 @@ export const ExperienceSection: React.FC<ExperienceProps> = ({ lang }) => {
   const experiences = [
     {
       period: "2026",
-      roleFr: "Développeur Full-Stack (MEVN)",
-      roleEn: "Full-Stack Software Engineer (MEVN)",
+      roleFr: "Développeur Full-Stack (MEVN & MERN)",
+      roleEn: "Full-Stack Developer (MEVN & MERN)",
       company: "Dizy Web Marketing Agency",
       location: "Djerba, Tunisie",
       type: "Production Web Platform",
@@ -209,8 +209,8 @@ export const ExperienceSection: React.FC<ExperienceProps> = ({ lang }) => {
             </h4>
             <p className="text-xs text-zinc-300 leading-relaxed">
               {lang === "fr"
-                ? "Recherche active d'un stage PFE début 2026 en développement Full-Stack (Vue.js, Node.js, React) ou ingénierie de données / IA."
-                : "Actively seeking a 2026 Graduation Internship (PFE) in Full-Stack Engineering (Vue.js, Node.js, React) or AI/Data applications."}
+                ? "Recherche active d'un stage PFE début 2026 en tant que Développeur Full-Stack (Vue.js, React, Node.js, Express, MongoDB) ou applications IA."
+                : "Actively seeking a 2026 Graduation Internship (PFE) as a Full-Stack Developer (Vue.js, React, Node.js, Express, MongoDB) or AI applications."}
             </p>
             <a
               href="#contact"
